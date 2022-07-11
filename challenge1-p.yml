@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Abbas template to create ec2 instance
+Parameters:
+  myVPC:
+      Description: VPC used to deploy our resources below
+      Type: AWS::EC2::VPC::Id
+  PublicSubnet:
+      Description: Subnet to be used for our Web Server
+      Type: AWS::EC2::Subnet::Id
+  AMItoUse:
+      Description: AMI to use for our base image
+      Type: String
+Resources:
+  mySecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: allow http traffic port 80
+      GroupName: allow http
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      VpcId:
+        Ref: myVPC
+  myEc2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AMItoUse
+      InstanceType: t3.micro
+      KeyName: "abbas-root2"
+      NetworkInterfaces: 
+      - AssociatePublicIpAddress: "true"
+        DeviceIndex: "0"
+        GroupSet: 
+          - Ref: "mySecGroup"
+        SubnetId:
+          Ref: PublicSubnet
+      Tags: 
+        - Key: "Name"
+          Value: "abbas-ec2"
+      UserData:
+       Fn::Base64: !Sub |
+         #!/bin/bash
+         sudo yum update -y
+         sudo yum install -y httpd
+         sudo systemctl start httpd
+         sudo systemctl enable httpd
