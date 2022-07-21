@@ -1,0 +1,102 @@
+Description: >
+  create RDS mysql database 
+Parameters:
+
+  EnvironmentName:
+        Description: An environment name that will be prefixed to resource names
+        Type: String
+  
+  DBInstanceID:
+    Default: mydbinstance
+    Description: My database instance
+    Type: String
+    MinLength: '1'
+    MaxLength: '63'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: >-
+      Must begin with a letter and must not end with a hyphen or contain two
+      consecutive hyphens.
+  DBName:
+    Default: mydb
+    Description: My database
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: Must begin with a letter and contain only alphanumeric characters.
+  DBInstanceClass:
+    Default: db.t3.micro
+    Description: DB instance class
+    Type: String
+    ConstraintDescription: Must select a valid DB instance type.
+  DBAllocatedStorage:
+    Default: '50'
+    Description: The size of the database (GiB)
+    Type: Number
+    MinValue: '20'
+    MaxValue: '65536'
+    ConstraintDescription: must be between 20 and 65536 GiB.
+  DBUsername:
+    NoEcho: 'true'
+    Description: Username for MySQL database access
+    Type: String
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  DBPassword:
+    NoEcho: 'true'
+    Description: Password MySQL database access
+    Type: String
+    MinLength: '8'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+Resources:
+  MySqlSubnetGroup: 
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties: 
+      DBSubnetGroupDescription: private subnet for rds to use
+      SubnetIds: 
+        - Fn::ImportValue: !Sub "${EnvironmentName}-PRI1-SN"
+        - Fn::ImportValue: !Sub "${EnvironmentName}-PRI2-SN"
+      Tags: 
+        - 
+          Key: Name
+          Value: !Sub ${EnvironmentName}-DB-SUB
+  Mysql:
+    Type: 'AWS::RDS::DBInstance'
+    # in practice, remember to delete the db from console 
+    DeletionPolicy: "Retain"
+    Properties:
+      DBInstanceIdentifier: !Ref DBInstanceID
+      DBName: !Sub ${EnvironmentName}${DBName}
+      DBInstanceClass: !Ref DBInstanceClass
+      Engine: MySQL
+      EngineVersion: "8.0.28"
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      MultiAZ: true
+      StorageType: gp2
+      AllocatedStorage: !Ref DBAllocatedStorage
+      DBSubnetGroupName: !Ref MySqlSubnetGroup
+      PubliclyAccessible: false
+      VPCSecurityGroups: [sg-0e6270225c7cbe6bc]
+      Tags: 
+        - 
+          Key: Name
+          Value: !Sub ${EnvironmentName}-MySQL-${DBName}
+
+Outputs:
+
+  EndpointAddress:
+    Description: dataabase address
+    Value: !GetAtt Mysql.Endpoint.Address
+    Export:
+      Name: !Sub ${EnvironmentName}-mysql-address
+  
+  EndpointPort:
+    Description: dataabase port
+    Value: !GetAtt Mysql.Endpoint.Port
+    Export:
+      Name: !Sub ${EnvironmentName}-mysql-port

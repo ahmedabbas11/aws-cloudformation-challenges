@@ -1,0 +1,30 @@
+[
+    {
+        "ParameterKey": "EnvironmentName",
+        "ParameterValue": "UdacityProject"
+    },
+    {
+        "ParameterKey": "DBInstanceID",
+        "ParameterValue": "UdacityProjectMYSQL"
+    },
+    {
+        "ParameterKey": "DBName",
+        "ParameterValue": "MYSQL"
+    },
+    {
+        "ParameterKey": "DBInstanceClass",
+        "ParameterValue": "db.t3.micro"
+    },
+    {
+        "ParameterKey": "DBAllocatedStorage",
+        "ParameterValue": "20"
+    },
+    {
+        "ParameterKey": "DBUsername",
+        "ParameterValue": "root"
+    },
+    {
+        "ParameterKey": "DBPassword",
+        "ParameterValue": "12345678"
+    }
+   ]
